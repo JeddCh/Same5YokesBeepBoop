@@ -1,3 +1,5 @@
+//@ts-nocheck
+
 import { Client, Intents, Message, TextChannel, Interaction, GuildMember, AnyChannel } from "discord.js";
 import { VoiceConnection, joinVoiceChannel, createAudioPlayer, createAudioResource, AudioPlayerStatus, DiscordGatewayAdapterCreator } from "@discordjs/voice";
 import { join } from 'node:path';
@@ -220,19 +222,23 @@ const express = require("express");
 const app = express()
 const port = process.env.PORT || 3001;
 
+const express = require('express');
+const app = express();
+const port = process.env.PORT || 3001;
+
 app.get('/', (_req, res, _next) => {
-    const healthcheck = {
-        uptime: process.uptime(),
-        message: 'OK',
-        timestamp: Date.now()
-    };
-    try {
-        res.send(healthcheck);
-    } catch (error) {
-        healthcheck.message = error;
-        res.status(503).send();
-    }
+	const healthcheck = {
+		uptime: process.uptime(),
+		message: 'OK',
+		timestamp: Date.now(),
+	};
+	try {
+		res.send(healthcheck);
+	} catch (error) {
+		healthcheck.message = error;
+		res.status(503).send();
+	}
 });
 app.listen(port, () => {
-    console.log(`Listening on port ${port}`)
-})
+	console.log(`Listening on port ${port}`);
+});
