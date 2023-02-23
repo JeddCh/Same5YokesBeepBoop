@@ -218,10 +218,6 @@ client.once('ready', (): void => {
     console.log('Same5JokesBot online.');
 });
 
-const express = require("express");
-const app = express()
-const port = process.env.PORT || 3001;
-
 const express = require('express');
 const app = express();
 const port = process.env.PORT || 3001;
