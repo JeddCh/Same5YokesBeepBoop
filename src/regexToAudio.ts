@@ -1,103 +1,142 @@
+import moment from "moment-timezone";
+import { getRandomRange } from './util'
+
+const congratulations = ['congratulations01', 'congratulations02', 'congratulations03', 'congratulations04', 'congratulations05', 'congratulations06', 'congratulations07', 'congratulations08', 'congratulations09', 'congratulations10', 'congratulations11', 'congratulations12', 'congratulations13',]
+function getCongratulations(): string {
+    return congratulations[getRandomRange(congratulations.length)];
+}
+
+const shutUp = ['smosh_shut_up', 'imaqtpie_ shut_up']
+function getShutUp(): string {
+    return shutUp[getRandomRange(shutUp.length)];
+}
+
 const regexToAudio = [
     {
         regex: /w(oah|hoa)/,
-        audio: 'basementgang'
+        getAudio: () => 'basementgang'
     },
     {
         regex: /(thunder vs lightning)/,
-        audio: 'thunder_vs_lightning_full'
+        getAudio: () => 'thunder_vs_lightning_full'
     },
     {
         regex: /demon/,
-        audio: 'demontime'
+        getAudio: () => 'demontime'
     },
     {
         regex: /i'?m.*(4|four|poor|bored)/,
-        audio: 'VillagerCWhat3'
+        getAudio: () => 'VillagerCWhat3'
     },
     {
-        regex: /((yo)?u|yu).*(no|know)|sigh/,
-        audio: 'sykkuno'
+        regex: /((yo)?u) (no|know)|sigh|yuno/,
+        getAudio: () => 'sykkuno'
     },
     {
         regex: /uh.*oh/,
-        audio: 'uhohstinky'
+        getAudio: () => 'uhohstinky'
     },
     {
         regex: /(tbc.*hype|focus.*up)/,
-        audio: 'tbchype'
+        getAudio: () => 'tbchype'
     },
     {
         regex: /suc(c|k|tion)/,
-        audio: 'suction'
+        getAudio: () => 'suction'
     },
     {
         regex: /stop/,
-        audio: 'itstimetostop'
+        getAudio: () => 'itstimetostop'
     },
     {
         regex: /dog/,
-        audio: 'whatthedogdoin'
+        getAudio: () => 'whatthedogdoin'
     },
     {
-        regex: /bean/,
-        audio: 'beans'
+        regex: /bean|badlands|chugs|eric booker/,
+        getAudio: () => 'beans'
     },
     {
-        regex: /smosh|shut.*up/,
-        audio: 'smosh_shut_up'
+        regex: /smosh|shut.*up|imaqtpie/,
+        getAudio: () => getShutUp()
     },
     {
         regex: /^\bno\b$|noidontthinkso/,
-        audio: 'NOIDONTTHINKSO'
+        getAudio: () => 'NOIDONTTHINKSO'
     },
     {
         regex: /fulcrum|c(o|u)me?/,
-        audio: 'fulcrum_come_in'
+        getAudio: () => 'fulcrum_come_in'
     },
     {
         regex: /\bl\b/,
-        audio: 'obliterated'
+        getAudio: () => 'obliterated'
     },
     {
         regex: /good morning|morning|gm|donda/,
-        audio: 'good_morning_donda'
+        getAudio: () => 'good_morning_donda'
     },
     {
         regex: /(not|doesn\'t) look.*good|watch this/,
-        audio: 'guga'
+        getAudio: () => 'guga'
     },
     {
         regex: /wake.*up/,
-        audio: 'WAKEUP'
+        getAudio: () => 'WAKEUP'
     },
     {
         regex: /want/,
-        audio: 'YOUWANTEDTO'
+        getAudio: () => 'YOUWANTEDTO'
     },
     {
-        regex: /forget|forgot|forgor/,
-        audio: 'fugetaboutit'
+        regex: /forget|forgot|forgor|i'?m walking here/,
+        getAudio: () => 'fugetaboutit'
     },
     {
         regex: /blind|deaf/,
-        audio: 'im_blind_not_deaf'
+        getAudio: () => 'im_blind_not_deaf'
     },
     {
         regex: /they came|behind/,
-        audio: 'they_came_from_behind'
+        getAudio: () => 'they_came_from_behind'
     },
     {
         regex: /no\s*no\s*no|not like that/,
-        audio: 'no_no_no_not_like_that'
+        getAudio: () => 'no_no_no_not_like_that'
     },
     {
         regex: /soda/,
-        audio: 'SODA'
+        getAudio: () => 'SODA'
     },
     {
         regex: /legend(ary)?/,
-        audio: 'GOLDEN_LEGENDARY'
+        getAudio: () => 'GOLDEN_LEGENDARY'
+    },
+    {
+        regex: /grats|congratulations|gz/,
+        getAudio: () => getCongratulations()
+    },
+    {
+        regex: /[0-9]+\s+(pc|piece|set)/,
+        getAudio: () => 'the_one_piece_is_real'
+    },
+    {
+        regex: /michael|hbd|b(irth)?day/,
+        getAudio: () => 'michael_its_your_bd_today'
+    },
+    {
+        regex: /ahem|cough|breakfast/,
+        getAudio: () => 'breakfast'
+    },
+    {
+        regex: /food/,
+        getAudio: () => {
+            const hour = moment().utc().tz('America/Toronto').hour();
+            if (hour >= 4 && hour < 12) {
+                return 'breakfast'
+            }
+            return ''
+        }
     }
 ];
 

@@ -1,36 +1,47 @@
 import { emotes } from './emotes';
-
-// Random integer between 0 and max
-function getRandomRange(max: number): number {
-	return Math.floor(Math.random() * max);
-}
+import { getRandomRange } from './util'
 
 // Where is Andy random response
 const verbs = ['Walking', 'Washing', 'Eating'];
 const nouns = ['dog', 'dishes', 'dinner'];
 function whereIsAndy(): string {
-	const verb = verbs[getRandomRange(verbs.length)];
-	const noun = nouns[getRandomRange(nouns.length)];
-	return verb + ' his ' + noun + '.';
+    const verb = verbs[getRandomRange(verbs.length)];
+    const noun = nouns[getRandomRange(nouns.length)];
+    return verb + ' his ' + noun + '.';
 }
 
 const translations = ['Prance forward', 'Shashay left', 'Boogie down', 'Shimmy right'];
 function getTranslation(): string {
-	return translations[getRandomRange(translations.length)];
+    return translations[getRandomRange(translations.length)];
 }
 
 const gamers = ['Rise up!', 'Disperse!', 'Discharge!'];
 function getGamersResponse(): string {
-	return gamers[getRandomRange(gamers.length)];
+    return gamers[getRandomRange(gamers.length)];
 }
 
 function getNextYear(): number {
-	return new Date().getFullYear() + 1;
+    return new Date().getFullYear() + 1;
 }
 
-const lifeIs = ['Strange', 'Peculiar']
+const life = ['is Strange', 'is Peculiar', 'of Luxury']
 function getLifeAdjective(): string {
-    return lifeIs[getRandomRange(lifeIs.length)];
+    return life[getRandomRange(life.length)];
+}
+
+const sonsOf = ['the Forest', 'Anarchy']
+function getSonsOf(): string {
+    return sonsOf[getRandomRange(sonsOf.length)];
+}
+
+const DND = ['Dungeons and Dragons?', 'Dark and Darker?', 'Where\'s Albert?']
+function getDND(): string {
+    return DND[getRandomRange(DND.length)];
+}
+
+const val = ['orant?', 'heim?']
+function getVal(): string {
+    return val[getRandomRange(val.length)];
 }
 
 const regexToText = [
@@ -91,14 +102,6 @@ const regexToText = [
         getText: () => `I'm a leak, I'm a leak. ${emotes.sadge ?? ''}`
     },
     {
-        regex: /166/,
-        getText: () => 'https://media.discordapp.net/attachments/158049091434184705/795546735594045450/unknown.png'
-    },
-    {
-        regex: /judge?ment/,
-        getText: () => 'https://media.discordapp.net/attachments/837434910486691873/1008836841581072454/judgment.png'
-    },
-    {
         regex: /shut.*up/,
         getText: () => 'Smosh voice.'
     },
@@ -144,8 +147,58 @@ const regexToText = [
     },
     {
         regex: /\blife\b/,
-        getText: () => `is ${getLifeAdjective()}.`
-    }
+        getText: () => `${getLifeAdjective()}.`
+    },
+    {
+        regex: /guess (yo)?u could say/,
+        getText: () => `Life is ${getLifeAdjective()}.`
+    },
+    {
+        regex: /\bsons\b/,
+        getText: () => `of ${getSonsOf()}.`
+    },
+    {
+        regex: /\bdark\b/,
+        getText: () => `and Darker.`
+    },
+    {
+        regex: /\bdnd\b/,
+        getText: () => getDND()
+    },
+    {
+        regex: /\bval\b/,
+        getText: () => getVal()
+    },
+    {
+        regex: /\bgrind(ing|s)?.*gears?\b/,
+        getText: () => 'Games.'
+    },
+    {
+        regex: /\bha\s*ha\b/,
+        getText: () => 'That\s crazy.'
+    },
+    {
+        regex: /\bthat'?s crazy\b/,
+        getText: () => 'Haha.'
+    },
+    {
+        regex: /voti|vault of the incarnates|vaati/,
+        getText: () => 'Vidya.'
+    },
+    // Images
+    {
+        regex: /166/,
+        getText: () => 'https://media.discordapp.net/attachments/158049091434184705/795546735594045450/unknown.png'
+    },
+    {
+        regex: /judge?ment/,
+        getText: () => 'https://media.discordapp.net/attachments/837434910486691873/1008836841581072454/judgment.png'
+    },
+    {
+        regex: /m(ine)?c(raft)?|chernobyl/,
+        getText: () => 'https://cdn.discordapp.com/attachments/982195734046732338/1078118698222628915/mc_chernobyl.png'
+    },
+
 ];
 
 export default regexToText;

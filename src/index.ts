@@ -1,4 +1,4 @@
-import { Client, Intents, Message, TextChannel, Interaction, GuildMember } from "discord.js";
+import { Client, Intents, Message, TextChannel, Interaction, GuildMember, AnyChannel } from "discord.js";
 import { VoiceConnection, joinVoiceChannel, createAudioPlayer, createAudioResource, AudioPlayerStatus, DiscordGatewayAdapterCreator } from "@discordjs/voice";
 import { join } from 'node:path';
 import * as dotenv from 'dotenv'
@@ -11,6 +11,7 @@ import regexToReact from "./regexToReact";
 import { getEmotes } from './emotes'
 
 const client = new Client({ intents: [Intents.FLAGS.GUILDS, Intents.FLAGS.GUILD_MESSAGES, Intents.FLAGS.GUILD_VOICE_STATES] });
+let mainChannel: AnyChannel | undefined;
 
 const player = createAudioPlayer();
 let timeoutId: NodeJS.Timer | null = null;
@@ -60,14 +61,7 @@ client.on('messageCreate', async (message: Message): Promise<void> => {
     for (const regexReact of regexToReact) {
         const react = regexReact.getReact()
         if (react && regexReact.regex.test(command)) {
-            if (/^\ba\b$/.test(command)) {
-                if (new Date().getMonth() == 1) {
-                    message.react(react);
-                }
-            }
-            else {
-                message.react(react);
-            }
+            message.react(react);
         }
     }
 
@@ -99,13 +93,16 @@ client.on('messageCreate', async (message: Message): Promise<void> => {
     // Audio replies
     for (let regexAudio of regexToAudio) {
         if (regexAudio.regex.test(command) && message.member && message.member.voice.channel && message.guild) {
-            const voiceConnection = {
-                channelId: message.member.voice.channel.id,
-                guildId: message.guild.id,
-                adapterCreator: message.guild.voiceAdapterCreator
+            const audio = regexAudio.getAudio();
+            if (audio) {
+                const voiceConnection = {
+                    channelId: message.member.voice.channel.id,
+                    guildId: message.guild.id,
+                    adapterCreator: message.guild.voiceAdapterCreator
+                }
+                playAudioFile(message.member.user.username, voiceConnection, audio);
+                break;
             }
-            playAudioFile(message.member.user.username, voiceConnection, regexAudio.audio);
-            break;
         }
     }
 });
@@ -154,6 +151,11 @@ client.on('voiceStateUpdate', async (oldState, newState) => {
                 adapterCreator: newState.guild.voiceAdapterCreator
             }
             playAudioFile('', voiceConnection, 'good_morning_donda');
+        }
+    }
+    if ((newState.member?.id == '180881117547593728' || Math.random() < 0.1) && newState.channelId == null) {
+        if (mainChannel && mainChannel instanceof TextChannel) {
+            mainChannel.send('You made Azi leave.');
         }
     }
 });
@@ -208,7 +210,8 @@ WoWResetScheduledMessage.start();
 
 client.login(process.env.BOT_TOKEN);
 client.once('ready', (): void => {
-    console.log('Same5JokesBot online.');
     // Add emotes from server to emotes object
     getEmotes(client);
+    mainChannel = client.channels.cache.get('1042597804452872285');
+    console.log('Same5JokesBot online.');
 });
