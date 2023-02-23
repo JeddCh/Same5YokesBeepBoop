@@ -215,3 +215,24 @@ client.once('ready', (): void => {
     mainChannel = client.channels.cache.get('1042597804452872285');
     console.log('Same5JokesBot online.');
 });
+
+const express = require("express");
+const app = express()
+const port = process.env.PORT || 3001;
+
+app.get('/', (_req, res, _next) => {
+    const healthcheck = {
+        uptime: process.uptime(),
+        message: 'OK',
+        timestamp: Date.now()
+    };
+    try {
+        res.send(healthcheck);
+    } catch (error) {
+        healthcheck.message = error;
+        res.status(503).send();
+    }
+});
+app.listen(port, () => {
+    console.log(`Listening on port ${port}`)
+})
