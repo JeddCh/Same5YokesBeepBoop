@@ -19,6 +19,7 @@ const gamers = ['Rise up!', 'Disperse!', 'Discharge!'];
 function getGamersResponse(): string {
     return gamers[getRandomRange(gamers.length)];
 }
+let disperseStreak = 0;
 
 function getNextYear(): number {
     return new Date().getFullYear() + 1;
@@ -44,6 +45,11 @@ function getVal(): string {
     return val[getRandomRange(val.length)];
 }
 
+const wayneAction = ['Watching Westworld', 'Watching Better Call Saul', 'Watching Game of Thrones', 'Watching The Boys', 'Pathfinding', 'Kingmaking'];
+function whereIsWayne(): string {
+    return `${wayneAction[getRandomRange(wayneAction.length)]}.`;
+}
+
 const regexToText = [
     {
         regex: /where.*andy/,
@@ -55,7 +61,19 @@ const regexToText = [
     },
     {
         regex: /gamers/,
-        getText: () => getGamersResponse()
+        getText: (_message: string, username: string) => {
+            let res = getGamersResponse();
+            if (res === 'Disperse!') {
+                disperseStreak++;
+            }
+            else {
+                if (disperseStreak > 1) {
+                    res = `Disperse Streak: ${disperseStreak} - ${username}'s fault.\n${res}`
+                }
+                disperseStreak = 0;
+            }
+            return res;
+        }
     },
     {
         regex: /bazinga|zimbabwe/,
@@ -146,7 +164,7 @@ const regexToText = [
         getText: () => '(with rizz)'
     },
     {
-        regex: /\blife\b/,
+        regex: /life/,
         getText: () => `${getLifeAdjective()}.`
     },
     {
@@ -154,11 +172,11 @@ const regexToText = [
         getText: () => `Life is ${getLifeAdjective()}.`
     },
     {
-        regex: /\bsons\b/,
+        regex: /sons/,
         getText: () => `of ${getSonsOf()}.`
     },
     {
-        regex: /\bdark\b/,
+        regex: /dark/,
         getText: () => `and Darker.`
     },
     {
@@ -178,7 +196,7 @@ const regexToText = [
         getText: () => 'That\s crazy.'
     },
     {
-        regex: /\bthat'?s crazy\b/,
+        regex: /that'?s crazy/,
         getText: () => 'Haha.'
     },
     {
@@ -198,7 +216,28 @@ const regexToText = [
         regex: /m(ine)?c(raft)?|chernobyl/,
         getText: () => 'https://cdn.discordapp.com/attachments/982195734046732338/1078118698222628915/mc_chernobyl.png'
     },
+    {
+        regex: /since we('?re not| aren'?t) doing anything/,
+        getText: () => 'I gotta go.'
+    },
+    {
+        regex: /where.*wayne/,
+        getText: () => whereIsWayne()
+    },
+    {
+        regex: /\b(big|strong|handsome|tall|smart|rich|funny)\b/,
 
+        getText: (message: string, _username: string) => {
+            let arr = ['big', 'strong', 'handsome', 'tall', 'smart', 'rich', 'funny'];
+            for (let i = 0; i < arr.length; i++) {
+                if (message.includes(arr[i])) {
+                    arr.splice(i, 1);
+                }
+            }
+            let str = arr.join(', ');
+            return `${str.charAt(0).toUpperCase()}${str.slice(1)}.`;
+        }
+    },
 ];
 
 export default regexToText;

@@ -3,14 +3,14 @@
 import { Client, Intents, Message, TextChannel, Interaction, GuildMember, AnyChannel } from "discord.js";
 import { VoiceConnection, joinVoiceChannel, createAudioPlayer, createAudioResource, AudioPlayerStatus, DiscordGatewayAdapterCreator } from "@discordjs/voice";
 import { join } from 'node:path';
-import * as dotenv from 'dotenv'
-dotenv.config()
+import * as dotenv from 'dotenv';
+dotenv.config();
 import cron from 'cron';
 import moment from "moment-timezone";
 import regexToText from './regexToText';
 import regexToAudio from './regexToAudio';
 import regexToReact from "./regexToReact";
-import { getEmotes } from './emotes'
+import { getEmotes } from './emotes';
 
 const client = new Client({ intents: [Intents.FLAGS.GUILDS, Intents.FLAGS.GUILD_MESSAGES, Intents.FLAGS.GUILD_VOICE_STATES] });
 let mainChannel: AnyChannel | undefined;
@@ -19,29 +19,33 @@ const player = createAudioPlayer();
 let timeoutId: NodeJS.Timer | null = null;
 let connection: VoiceConnection;
 
-let disperseStreak = 0;
-
 // Disconnect after 5 min of inactivity
+// Reset timeout when audio playing
 player.on(AudioPlayerStatus.Playing, (): void => {
     if (timeoutId) {
         clearTimeout(timeoutId);
         timeoutId = null;
     }
 });
+// Start timeout timer when idle
 player.on(AudioPlayerStatus.Idle, (): void => {
     player.stop();
     timeoutId = setTimeout(() => {
         connection.disconnect();
         timeoutId = null;
+        if (mainChannel && mainChannel instanceof TextChannel) {
+            mainChannel.send('You made Azi leave.');
+        }
     }, 300000);
 });
 
-// Join voice channel and play audio
+
 interface voiceConnection {
     channelId: string,
     guildId: string,
     adapterCreator: DiscordGatewayAdapterCreator
 }
+// Join voice channel and play audio
 function playAudioFile(username: string, voiceConnection: voiceConnection, audioFie: string): void {
     console.log(`[${new Date().toLocaleTimeString('en-US')}] ${username} played ${audioFie}`);
     connection = joinVoiceChannel(voiceConnection);
@@ -70,19 +74,8 @@ client.on('messageCreate', async (message: Message): Promise<void> => {
     // Text replies
     let botMessage = '';
     for (let regexText of regexToText) {
-        if (regexText.regex.test(command)) {
-            const text = regexText.getText();
-            if (/gamers/.test(command)) {
-                if (text === 'Disperse!') {
-                    disperseStreak++;
-                }
-                else {
-                    if (disperseStreak > 1) {
-                        botMessage += `Disperse Streak: ${disperseStreak}\n`
-                    }
-                    disperseStreak = 0;
-                }
-            }
+        if (regexText.regex.test(command) && message.member) {
+            const text = regexText.getText(command, message.member?.displayName);
             botMessage += `${text}\n`;
         }
     }
@@ -94,17 +87,15 @@ client.on('messageCreate', async (message: Message): Promise<void> => {
 
     // Audio replies
     for (let regexAudio of regexToAudio) {
-        if (regexAudio.regex.test(command) && message.member && message.member.voice.channel && message.guild) {
-            const audio = regexAudio.getAudio();
-            if (audio) {
-                const voiceConnection = {
-                    channelId: message.member.voice.channel.id,
-                    guildId: message.guild.id,
-                    adapterCreator: message.guild.voiceAdapterCreator
-                }
-                playAudioFile(message.member.user.username, voiceConnection, audio);
-                break;
+        const audio = regexAudio.getAudio();
+        if (regexAudio.regex.test(command) && audio && message.member && message.member.voice.channel && message.guild) {
+            const voiceConnection = {
+                channelId: message.member.voice.channel.id,
+                guildId: message.guild.id,
+                adapterCreator: message.guild.voiceAdapterCreator
             }
+            playAudioFile(message.member.user.username, voiceConnection, audio);
+            break;
         }
     }
 });
@@ -132,7 +123,7 @@ client.on('interactionCreate', async (interaction: Interaction): Promise<void> =
     }
 });
 
-// On channel move / mute / deafen
+// On channel move/mute/deafen
 client.on('voiceStateUpdate', async (oldState, newState) => {
     // Play teleporting fat guy when moving between channels
     if (oldState.channelId && newState.channelId && oldState.channelId != newState.channelId) {
@@ -155,13 +146,15 @@ client.on('voiceStateUpdate', async (oldState, newState) => {
             playAudioFile('', voiceConnection, 'good_morning_donda');
         }
     }
-    if ((newState.member?.id == '180881117547593728' || Math.random() < 0.1) && newState.channelId == null) {
+    // Message when Azi leaves or chance when someone else leaves
+    if (newState.member?.id !== '837241561481347094' && (newState.member?.id == '180881117547593728' || Math.random() < 0.1) && newState.channelId == null) {
         if (mainChannel && mainChannel instanceof TextChannel) {
             mainChannel.send('You made Azi leave.');
         }
     }
 });
 
+// Cronjobs
 // Hourly water and posture check cronjob
 const waterPostureCheckScheduledMessage = new cron.CronJob('00 00 * * * *', (): void => {
     const channel = client.channels.cache.get('899162908498468934');
@@ -210,6 +203,7 @@ const WoWResetScheduledMessage = new cron.CronJob(
 );
 WoWResetScheduledMessage.start();
 
+// Login with bot token
 client.login(process.env.BOT_TOKEN);
 client.once('ready', (): void => {
     // Add emotes from server to emotes object
@@ -223,18 +217,18 @@ const app = express();
 const port = process.env.PORT || 3001;
 
 app.get('/', (_req, res, _next) => {
-	const healthcheck = {
-		uptime: process.uptime(),
-		message: 'OK',
-		timestamp: Date.now(),
-	};
-	try {
-		res.send(healthcheck);
-	} catch (error) {
-		healthcheck.message = error;
-		res.status(503).send();
-	}
+    const healthcheck = {
+        uptime: process.uptime(),
+        message: 'OK',
+        timestamp: Date.now(),
+    };
+    try {
+        res.send(healthcheck);
+    } catch (error) {
+        healthcheck.message = error;
+        res.status(503).send();
+    }
 });
 app.listen(port, () => {
-	console.log(`Listening on port ${port}`);
+    console.log(`Listening on port ${port}`);
 });
