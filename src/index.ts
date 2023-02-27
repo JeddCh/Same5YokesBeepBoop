@@ -156,16 +156,16 @@ client.on('voiceStateUpdate', async (oldState, newState) => {
 
 // Cronjobs
 // Hourly water and posture check cronjob
-const waterPostureCheckScheduledMessage = new cron.CronJob('00 00 * * * *', (): void => {
-    const channel = client.channels.cache.get('899162908498468934');
-    if (channel && channel instanceof TextChannel) {
-        channel.send('<@&899160433548722176> Water Check. Posture Check.');
-    }
-    else {
-        console.log('Water/Posture Check channel not found.');
-    }
-});
-waterPostureCheckScheduledMessage.start();
+// const waterPostureCheckScheduledMessage = new cron.CronJob('00 00 * * * *', (): void => {
+//     const channel = client.channels.cache.get('899162908498468934');
+//     if (channel && channel instanceof TextChannel) {
+//         channel.send('<@&899160433548722176> Water Check. Posture Check.');
+//     }
+//     else {
+//         console.log('Water/Posture Check channel not found.');
+//     }
+// });
+// waterPostureCheckScheduledMessage.start();
 
 // Daily Wordle reminder cronjob
 const wordleScheduledMessage = new cron.CronJob(

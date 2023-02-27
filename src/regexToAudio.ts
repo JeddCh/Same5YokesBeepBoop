@@ -117,7 +117,7 @@ const regexToAudio = [
         getAudio: () => getCongratulations()
     },
     {
-        regex: /[0-9]+\s+(pc|piece|set)/,
+        regex: /[0-9]+\s*(pc|piece|set)/,
         getAudio: () => 'the_one_piece_is_real'
     },
     {
@@ -137,6 +137,26 @@ const regexToAudio = [
             }
             return ''
         }
+    },
+    {
+        regex: /finite|possibl|axe/,
+        getAudio: () => 'infinite_possibilities'
+    },
+    {
+        regex: /small.*cat|feral/,
+        getAudio: () => 'small_cat'
+    },
+    {
+        regex: /under.*water/,
+        getAudio: () => 'i_am_under_the_water'
+    },
+    {
+        regex: /everybody/,
+        getAudio: () => 'guga_everybody'
+    },
+    {
+        regex: /arthur|knit/,
+        getAudio: () => 'arthur_knitter'
     }
 ];
 
