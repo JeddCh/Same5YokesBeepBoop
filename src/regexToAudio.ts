@@ -157,6 +157,10 @@ const regexToAudio = [
     {
         regex: /arthur|knit/,
         getAudio: () => 'arthur_knitter'
+    },
+    {
+        regex: /zoomin|foreign|t(yler)?1/,
+        getAudio: () => 'zoomin_in_the_foreign'
     }
 ];
 
