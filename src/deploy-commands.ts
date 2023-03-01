@@ -1,5 +1,4 @@
-import { SlashCommandBuilder } from '@discordjs/builders';
-import { REST } from '@discordjs/rest';
+import { SlashCommandBuilder, REST } from 'discord.js';
 import { Routes } from 'discord-api-types/v9';
 import * as dotenv from 'dotenv';
 dotenv.config();
@@ -12,40 +11,42 @@ const playCommand = new SlashCommandBuilder()
 			.setName('audio')
 			.setDescription('Audio clip')
 			.setRequired(true)
-			.addChoice('Thunder vs Lightning', 'thunder_vs_lightning')
-			.addChoice('Phasmo Breath', 'phasmo_breath')
-			/*
-            .addChoice('Phasmo Die', 'phasmo_die')
-            .addChoice('Phasmo Groan', 'phasmo_groan')
-            .addChoice('Phasmo Heartbeat', 'phasmo_heartbeat')
-            .addChoice('Phasmo Kill', 'phasmo_kill')
-            .addChoice('Phasmo Behind', 'phasmo_behind')
-			.addChoice('Phasmo Here', 'phasmo_here')
-			*/
-			.addChoice('Among Us Emergency Meeting', 'amongus_meeting')
-			.addChoice('Disgustang', 'disgustang')
-			.addChoice('Demon Time', 'demontime')
-			.addChoice('What the dog doin', 'whatthedogdoin')
-			.addChoice('Beans', 'beans')
-			.addChoice('Beans Slow', 'beans_slow')
-			.addChoice('NOIDONTTHINKSO', 'NOIDONTTHINKSO')
-			.addChoice('Uh guys?', 'uhguys')
-			.addChoice('ENOUGH TALK', 'ENOUGHTALK')
-			.addChoice('Champ Select', 'champ_select')
-			.addChoice('TRUE', 'TRUE')
-			.addChoice('Moonmoon destroys Weebs', 'moonmoon_destroys_weebs')
-			.addChoice('Bing Chilling', 'bing_chilling')
-			.addChoice('An Exclusive! It Arrived', 'an_exclusive_it_arrived')
-			.addChoice('Smosh: Shut Up!', 'smosh_shut_up')
-			.addChoice('Get ready! M.O.A.B.!', 'get_ready_MOAB')
-			.addChoice('Clean-cut, and still cuts a tomato.', 'clean_cuts')
-			.addChoice('Game over, man.', 'game_over_man')
-			.addChoice('Fulcrum, come in', 'fulcrum_come_in')
-			.addChoice('Obliterated', 'obliterated')
-			.addChoice('FADEDTHANAHO', 'FADEDTHANAHO')
-			.addChoice('Good Morning Donda', 'good_morning_donda')
-			.addChoice('Teleporting Fat Guy', 'teleporting_fat_guy')
-			.addChoice('Guga', 'guga')
+			.addChoices(
+				{ name: 'Thunder vs Lightning', value: 'thunder_vs_lightning' },
+				/*
+				{ name: 'Phasmo Breath', value: 'phasmo_breath' },
+				{ name: 'Phasmo Die', value: 'phasmo_die' },
+				{ name: 'Phasmo Groan', value: 'phasmo_groan' },
+				{ name: 'Phasmo Heartbeat', value: 'phasmo_heartbeat' },
+				{ name: 'Phasmo Kill', value: 'phasmo_kill' },
+				{ name: 'Phasmo Behind', value: 'phasmo_behind' },
+				{ name: 'Phasmo Here', value: 'phasmo_here' },
+				*/
+				{ name: 'Among Us Emergency Meeting', value: 'amongus_meeting' },
+				{ name: 'Disgustang', value: 'disgustang' },
+				{ name: 'Demon Time', value: 'demontime' },
+				{ name: 'What the dog doin', value: 'whatthedogdoin' },
+				{ name: 'Beans', value: 'beans' },
+				{ name: 'Beans Slow', value: 'beans_slow' },
+				{ name: 'NOIDONTTHINKSO', value: 'NOIDONTTHINKSO' },
+				{ name: 'Uh guys?', value: 'uhguys' },
+				{ name: 'ENOUGH TALK', value: 'ENOUGHTALK' },
+				{ name: 'Champ Select', value: 'champ_select' },
+				{ name: 'TRUE', value: 'TRUE' },
+				{ name: 'Moonmoon destroys Weebs', value: 'moonmoon_destroys_weebs' },
+				{ name: 'Bing Chilling', value: 'bing_chilling' },
+				{ name: 'An Exclusive! It Arrived', value: 'an_exclusive_it_arrived' },
+				{ name: 'Smosh: Shut Up!', value: 'smosh_shut_up' },
+				{ name: 'Get ready! M.O.A.B.!', value: 'get_ready_MOAB' },
+				{ name: 'Clean-cut, and still cuts a tomato.', value: 'clean_cuts' },
+				{ name: 'Game over, man.', value: 'game_over_man' },
+				{ name: 'Fulcrum, come in', value: 'fulcrum_come_in' },
+				{ name: 'Obliterated', value: 'obliterated' },
+				{ name: 'FADEDTHANAHO', value: 'FADEDTHANAHO' },
+				{ name: 'Good Morning Donda', value: 'good_morning_donda' },
+				{ name: 'Teleporting Fat Guy', value: 'teleporting_fat_guy' },
+				{ name: 'Guga', value: 'guga' },
+			)
 	);
 
 const rollCommand = new SlashCommandBuilder()

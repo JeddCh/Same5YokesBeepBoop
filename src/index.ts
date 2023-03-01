@@ -1,23 +1,22 @@
 //@ts-nocheck
-
-import { Client, Intents, Message, TextChannel, Interaction, GuildMember, AnyChannel } from "discord.js";
-import { VoiceConnection, VoiceConnectionStatus, joinVoiceChannel, createAudioPlayer, createAudioResource, AudioPlayerStatus, DiscordGatewayAdapterCreator } from "@discordjs/voice";
+import { Client, GatewayIntentBits, Message, TextChannel, Interaction, GuildMember, ChannelType, Events } from "discord.js";
+import { VoiceConnection, VoiceConnectionStatus, joinVoiceChannel, createAudioPlayer, createAudioResource, AudioPlayerStatus, DiscordGatewayAdapterCreator, entersState } from "@discordjs/voice";
 import { join } from 'node:path';
 import * as dotenv from 'dotenv';
 dotenv.config();
 import cron from 'cron';
 import moment from "moment-timezone";
-import regexToText from './regexToText';
-import regexToAudio from './regexToAudio';
-import regexToReact from "./regexToReact";
+import regexToText from './regex-to-text';
+import regexToAudio from './regex-to-audio';
+import regexToReact from "./regex-to-react";
 import { getEmotes } from './emotes';
 
-const client = new Client({ intents: [Intents.FLAGS.GUILDS, Intents.FLAGS.GUILD_MESSAGES, Intents.FLAGS.GUILD_VOICE_STATES] });
-let mainChannel: AnyChannel | undefined;
+const client = new Client({ intents: [GatewayIntentBits.Guilds, GatewayIntentBits.GuildMessages, GatewayIntentBits.MessageContent, GatewayIntentBits.GuildVoiceStates] });
+let mainChannel: TextChannel | undefined;
 
 const player = createAudioPlayer();
 let timeoutId: NodeJS.Timer | null = null;
-let connection: VoiceConnection | null = null;
+let connection: VoiceConnection;
 
 // Disconnect after 15 min of inactivity
 // Reset timeout when audio playing
@@ -31,14 +30,10 @@ player.on(AudioPlayerStatus.Playing, (): void => {
 player.on(AudioPlayerStatus.Idle, (): void => {
     player.stop();
     timeoutId = setTimeout(() => {
-        destroyConnection();
+        connection.destroy();
         timeoutId = null;
-        if (mainChannel && mainChannel instanceof TextChannel) {
-            mainChannel.send('You made Azi leave.');
-        }
     }, 900000);
 });
-
 
 interface voiceConnection {
     channelId: string,
@@ -52,18 +47,13 @@ function joinVoice(voiceConnection: voiceConnection) {
     // Add event listener on receiving voice input
     if (connection.receiver.speaking.listenerCount('start') === 0) {
         connection.receiver.speaking.on('start', async (userId) => {
-            // console.log(`${userId} is speaking`)
+
         });
     }
     // Remove listeners on disconnect
-    connection.on(VoiceConnectionStatus.Disconnected, () => {
-        if (connection) connection.receiver.speaking.removeAllListeners();
+    connection.on(VoiceConnectionStatus.Disconnected, async () => {
+        connection.receiver.speaking.removeAllListeners();
     })
-}
-
-function destroyConnection() {
-    if (connection) connection.destroy();
-    connection = null;
 }
 
 // Join voice channel and play audio
@@ -75,11 +65,13 @@ function playAudioFile(audioFie: string, username?: string): void {
 }
 
 // Responses to text messages
-client.on('messageCreate', async (message: Message): Promise<void> => {
+client.on(Events.MessageCreate, async (message: Message): Promise<void> => {
     // Don't respond to bots
     if (message.author.bot) return;
     // Don't respond to Bot Abuser role
     if (message.member && message.member.roles.cache.some(role => role.name === 'Bot Abuser')) return;
+    //
+    if (message.channel.type !== ChannelType.GuildText) return;
 
     const command = message.content.toLowerCase();
 
@@ -90,7 +82,6 @@ client.on('messageCreate', async (message: Message): Promise<void> => {
             message.react(react);
         }
     }
-
     // Text replies
     let botMessage = '';
     for (let regexText of regexToText) {
@@ -99,12 +90,10 @@ client.on('messageCreate', async (message: Message): Promise<void> => {
             botMessage += `${text}\n`;
         }
     }
-
     // Send message
     if (botMessage) {
         message.channel.send(botMessage);
     }
-
     // Audio replies
     for (let regexAudio of regexToAudio) {
         const audio = regexAudio.getAudio();
@@ -123,8 +112,8 @@ client.on('messageCreate', async (message: Message): Promise<void> => {
 });
 
 // Slash commands
-client.on('interactionCreate', async (interaction: Interaction): Promise<void> => {
-    if (!interaction.isCommand()) return;
+client.on(Events.InteractionCreate, async (interaction: Interaction): Promise<void> => {
+    if (!interaction.isChatInputCommand()) return;
     const { commandName } = interaction;
     // Play audio
     if (commandName === 'play' && interaction.member instanceof GuildMember && interaction.guild && interaction.member.voice.channel) {
@@ -148,9 +137,21 @@ client.on('interactionCreate', async (interaction: Interaction): Promise<void> =
 });
 
 // On channel move/mute/deafen
-client.on('voiceStateUpdate', async (oldState, newState) => {
-    // Play teleporting fat guy when moving between channels and not itself
-    if (newState.member?.id !== '837241561481347094' && oldState.channelId && newState.channelId && oldState.channelId != newState.channelId) {
+client.on(Events.VoiceStateUpdate, async (oldState, newState) => {
+    // Return if incorrect guild
+    if (oldState.guild.id !== process.env.GUILD_ID) return;
+    // Message when Azi leaves or chance when someone else leaves
+    if ((newState.member?.id == '180881117547593728' || Math.random() < 0.10) && newState.channelId == null) {
+        if (mainChannel && mainChannel.type === ChannelType.GuildText) {
+            mainChannel.send('You made Azi leave.').catch((e) => console.log(`Error sending to mainChannel: ${e}`));
+        }
+    }
+
+    // Return if voice state update is itself
+    if (oldState.id === client.user?.id) return;
+
+    // Play teleporting fat guy when moving between channels
+    if (oldState.channelId && newState.channelId && oldState.channelId != newState.channelId) {
         const voiceConnection = {
             channelId: newState.channelId,
             guildId: newState.guild.id,
@@ -159,6 +160,7 @@ client.on('voiceStateUpdate', async (oldState, newState) => {
         joinVoice(voiceConnection);
         playAudioFile('teleporting_fat_guy', oldState.member?.user.username);
     }
+
     // Play Good Morning Donda when joining channel in the morning
     if (newState.channelId && oldState.channelId == null) {
         const hour = moment().utc().tz('America/Toronto').hour();
@@ -170,12 +172,6 @@ client.on('voiceStateUpdate', async (oldState, newState) => {
             }
             joinVoice(voiceConnection);
             playAudioFile('good_morning_donda', oldState.member?.user.username);
-        }
-    }
-    // Message when Azi leaves or chance when someone else leaves
-    if ((newState.member?.id == '180881117547593728' || Math.random() < 0.1) && newState.channelId == null) {
-        if (mainChannel && mainChannel instanceof TextChannel) {
-            mainChannel.send('You made Azi leave.');
         }
     }
 });
@@ -198,7 +194,7 @@ const wordleScheduledMessage = new cron.CronJob(
     '00 00 00 * * *',
     (): void => {
         const channel = client.channels.cache.get('933772784948101120');
-        if (channel && channel instanceof TextChannel) {
+        if (channel && channel.type === ChannelType.GuildText) {
             channel.send('Wordle time POGCRAZY');
         }
         else {
@@ -216,7 +212,7 @@ const WoWResetScheduledMessage = new cron.CronJob(
     '00 00 17 * * 2',
     (): void => {
         const channel = client.channels.cache.get('158049091434184705');
-        if (channel && channel instanceof TextChannel) {
+        if (channel && channel.type === ChannelType.GuildText) {
             channel.send('When Mythic+/Vault of the Incarnates/World Boss/PvP/Timewalking');
         }
         else {
@@ -231,10 +227,13 @@ WoWResetScheduledMessage.start();
 
 // Login with bot token
 client.login(process.env.BOT_TOKEN);
-client.once('ready', (): void => {
+client.once(Events.ClientReady, (): void => {
     // Add emotes from server to emotes object
     getEmotes(client);
-    mainChannel = client.channels.cache.get('1042597804452872285');
+    let channel = client.channels.cache.get('1042597804452872285');
+    if (channel && channel.type === ChannelType.GuildText) {
+        mainChannel = channel;
+    }
     console.log('Same5JokesBot online.');
 });
 
