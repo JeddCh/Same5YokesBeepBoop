@@ -213,7 +213,7 @@ const regexToText = [
         getText: () => 'https://media.discordapp.net/attachments/837434910486691873/1008836841581072454/judgment.png'
     },
     {
-        regex: /m(ine)?c(raft)?|chernobyl/,
+        regex: /\bmc\b|minecraft|chernobyl/,
         getText: () => 'https://cdn.discordapp.com/attachments/982195734046732338/1078118698222628915/mc_chernobyl.png'
     },
     {

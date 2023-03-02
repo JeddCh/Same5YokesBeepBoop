@@ -17,7 +17,7 @@ const regexToAudio = [
         getAudio: () => 'basementgang'
     },
     {
-        regex: /(thunder vs lightning)/,
+        regex: /(thunder v(ersu)?s lightning)/,
         getAudio: () => 'thunder_vs_lightning_full'
     },
     {
@@ -117,7 +117,7 @@ const regexToAudio = [
         getAudio: () => getCongratulations()
     },
     {
-        regex: /[0-9]+\s*(pc|piece|set)/,
+        regex: /([0-9]+|one|two|three|four|five|six|seven|eight|nine)\s*(pc|piece|set)/,
         getAudio: () => 'the_one_piece_is_real'
     },
     {
@@ -139,7 +139,7 @@ const regexToAudio = [
         }
     },
     {
-        regex: /finite|possibl|axe/,
+        regex: /finite|possib|axe/,
         getAudio: () => 'infinite_possibilities'
     },
     {
@@ -159,7 +159,7 @@ const regexToAudio = [
         getAudio: () => 'arthur_knitter'
     },
     {
-        regex: /zoomin|foreign|t(yler)?1/,
+        regex: /zoomin|foreign|t(yler)?\s?(1|one)/,
         getAudio: () => 'zoomin_in_the_foreign'
     }
 ];

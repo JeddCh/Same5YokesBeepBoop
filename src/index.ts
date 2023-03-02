@@ -1,15 +1,18 @@
 //@ts-nocheck
-import { Client, GatewayIntentBits, Message, TextChannel, Interaction, GuildMember, ChannelType, Events } from "discord.js";
-import { VoiceConnection, VoiceConnectionStatus, joinVoiceChannel, createAudioPlayer, createAudioResource, AudioPlayerStatus, DiscordGatewayAdapterCreator, entersState } from "@discordjs/voice";
+import { Client, GatewayIntentBits, Message, TextChannel, Interaction, GuildMember, ChannelType, Events } from 'discord.js';
+import { VoiceConnection, VoiceConnectionStatus, joinVoiceChannel, createAudioPlayer, createAudioResource, AudioPlayerStatus, DiscordGatewayAdapterCreator, entersState } from '@discordjs/voice';
 import { join } from 'node:path';
 import * as dotenv from 'dotenv';
 dotenv.config();
 import cron from 'cron';
-import moment from "moment-timezone";
+import moment from 'moment-timezone';
 import regexToText from './regex-to-text';
 import regexToAudio from './regex-to-audio';
-import regexToReact from "./regex-to-react";
+import regexToReact from './regex-to-react';
 import { getEmotes } from './emotes';
+
+// @ts-ignore
+import Transcriber from 'discord-speech-to-text';
 
 const client = new Client({ intents: [GatewayIntentBits.Guilds, GatewayIntentBits.GuildMessages, GatewayIntentBits.MessageContent, GatewayIntentBits.GuildVoiceStates] });
 let mainChannel: TextChannel | undefined;
@@ -17,6 +20,7 @@ let mainChannel: TextChannel | undefined;
 const player = createAudioPlayer();
 let timeoutId: NodeJS.Timer | null = null;
 let connection: VoiceConnection;
+const transcriber = new Transcriber(process.env.WITAI_KEY);
 
 // Disconnect after 15 min of inactivity
 // Reset timeout when audio playing
@@ -47,13 +51,53 @@ function joinVoice(voiceConnection: voiceConnection) {
     // Add event listener on receiving voice input
     if (connection.receiver.speaking.listenerCount('start') === 0) {
         connection.receiver.speaking.on('start', async (userId) => {
-
+            // Return if audio player is playing audio
+            if (player.state.status === AudioPlayerStatus.Playing) return;
+            // Return if speaker is a bot
+            if (client.users.cache.get(userId)?.bot) return;
+            transcriber.listen(connection.receiver, userId, client.users.cache.get(userId)).then((data: any) => {
+                if (!data.transcript.text || player.state.status === AudioPlayerStatus.Playing) return;
+                let text = data.transcript.text.toLowerCase();
+                let user = data.user;
+                console.log(`[${new Date().toLocaleTimeString('en-US')}] ${data.user}: ${text}`);
+                for (let regexAudio of regexToAudio) {
+                    const audio = regexAudio.getAudio();
+                    if (regexAudio.regex.test(text) && audio) {
+                        playAudioFile(audio, user);
+                        break;
+                    }
+                }
+            });
         });
     }
     // Remove listeners on disconnect
     connection.on(VoiceConnectionStatus.Disconnected, async () => {
         connection.receiver.speaking.removeAllListeners();
+        try {
+            await Promise.race([
+                entersState(connection, VoiceConnectionStatus.Signalling, 5_000),
+                entersState(connection, VoiceConnectionStatus.Connecting, 5_000),
+            ]);
+            // Seems to be reconnecting to a new channel - ignore disconnect
+        } catch (error) {
+            // Seems to be a real disconnect which SHOULDN'T be recovered from
+            connection.destroy();
+        }
     })
+
+    // Temp fix for Discord UDP packet issue
+    connection.on('stateChange', (oldState, newState) => {
+        const oldNetworking = Reflect.get(oldState, 'networking');
+        const newNetworking = Reflect.get(newState, 'networking');
+
+        const networkStateChangeHandler = (oldNetworkState: any, newNetworkState: any) => {
+            const newUdp = Reflect.get(newNetworkState, 'udp');
+            clearInterval(newUdp?.keepAliveInterval);
+        }
+
+        oldNetworking?.off('stateChange', networkStateChangeHandler);
+        newNetworking?.on('stateChange', networkStateChangeHandler);
+    });
 }
 
 // Join voice channel and play audio
@@ -141,7 +185,7 @@ client.on(Events.VoiceStateUpdate, async (oldState, newState) => {
     // Return if incorrect guild
     if (oldState.guild.id !== process.env.GUILD_ID) return;
     // Message when Azi leaves or chance when someone else leaves
-    if ((newState.member?.id == '180881117547593728' || Math.random() < 0.10) && newState.channelId == null) {
+    if ((newState.member?.id == process.env.AZI_ID || Math.random() < 0.10) && newState.channelId == null) {
         if (mainChannel && mainChannel.type === ChannelType.GuildText) {
             mainChannel.send('You made Azi leave.').catch((e) => console.log(`Error sending to mainChannel: ${e}`));
         }
@@ -230,7 +274,7 @@ client.login(process.env.BOT_TOKEN);
 client.once(Events.ClientReady, (): void => {
     // Add emotes from server to emotes object
     getEmotes(client);
-    let channel = client.channels.cache.get('1042597804452872285');
+    let channel = client.channels.cache.get(process.env.MAIN_CHANNEL_ID ?? '');
     if (channel && channel.type === ChannelType.GuildText) {
         mainChannel = channel;
     }
