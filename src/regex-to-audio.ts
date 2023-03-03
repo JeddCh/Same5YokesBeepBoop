@@ -6,7 +6,7 @@ function getCongratulations(): string {
     return congratulations[getRandomRange(congratulations.length)];
 }
 
-const shutUp = ['smosh_shut_up', 'imaqtpie_ shut_up']
+const shutUp = ['smosh_shut_up', 'imaqtpie_shut_up']
 function getShutUp(): string {
     return shutUp[getRandomRange(shutUp.length)];
 }
@@ -61,19 +61,19 @@ const regexToAudio = [
         getAudio: () => getShutUp()
     },
     {
-        regex: /^\bno\b$|noidontthinkso/,
+        regex: /i don'?t think so/,
         getAudio: () => 'NOIDONTTHINKSO'
     },
     {
-        regex: /fulcrum|come/,
+        regex: /fulcrum|come in/,
         getAudio: () => 'fulcrum_come_in'
     },
     {
-        regex: /\bl\b/,
+        regex: /\bl+\b|obliterated|need i say more/,
         getAudio: () => 'obliterated'
     },
     {
-        regex: /good morning|morning|gm|donda/,
+        regex: /good morning|morning|\bgm\b|donda/,
         getAudio: () => 'good_morning_donda'
     },
     {
@@ -85,7 +85,7 @@ const regexToAudio = [
         getAudio: () => 'WAKEUP'
     },
     {
-        regex: /want/,
+        regex: /wanted to/,
         getAudio: () => 'YOUWANTEDTO'
     },
     {
@@ -93,7 +93,7 @@ const regexToAudio = [
         getAudio: () => 'fugetaboutit'
     },
     {
-        regex: /blind|deaf/,
+        regex: /blind|deaf|can'?t see/,
         getAudio: () => 'im_blind_not_deaf'
     },
     {
@@ -101,7 +101,7 @@ const regexToAudio = [
         getAudio: () => 'they_came_from_behind'
     },
     {
-        regex: /no\s*no\s*no|not like that/,
+        regex: /no,?\s*no,?\s*no|not like that/,
         getAudio: () => 'no_no_no_not_like_that'
     },
     {
@@ -159,8 +159,36 @@ const regexToAudio = [
         getAudio: () => 'arthur_knitter'
     },
     {
-        regex: /zoomin|foreign|t(yler)?\s?(1|one)/,
+        regex: /zoomin|foreign|\bt(yler)?\s?(1|one)/,
         getAudio: () => 'zoomin_in_the_foreign'
+    },
+    {
+        regex: /bye|baj|badge/,
+        getAudio: () => 'baj_baj'
+    },
+    {
+        regex: /mask/,
+        getAudio: () => 'bane_mask'
+    },
+    {
+        regex: /(for|4)\s+(yo)?u/,
+        getAudio: () => 'bane_for_you'
+    },
+    {
+        regex: /get ready/,
+        getAudio: () => 'get_ready_MOAB'
+    },
+    {
+        regex: /disgusting/,
+        getAudio: () => 'disgustang'
+    },
+    {
+        regex: /all the|alda/,
+        getAudio: () => 'small_things'
+    },
+    {
+        regex: /uh guys/,
+        getAudio: () => 'uh_guys'
     }
 ];
 

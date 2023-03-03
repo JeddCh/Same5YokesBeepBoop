@@ -29,7 +29,7 @@ const playCommand = new SlashCommandBuilder()
 				{ name: 'Beans', value: 'beans' },
 				{ name: 'Beans Slow', value: 'beans_slow' },
 				{ name: 'NOIDONTTHINKSO', value: 'NOIDONTTHINKSO' },
-				{ name: 'Uh guys?', value: 'uhguys' },
+				{ name: 'Uh guys?', value: 'uh_guys' },
 				{ name: 'ENOUGH TALK', value: 'ENOUGHTALK' },
 				{ name: 'Champ Select', value: 'champ_select' },
 				{ name: 'TRUE', value: 'TRUE' },

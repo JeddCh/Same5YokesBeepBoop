@@ -16,6 +16,7 @@ import Transcriber from 'discord-speech-to-text';
 
 const client = new Client({ intents: [GatewayIntentBits.Guilds, GatewayIntentBits.GuildMessages, GatewayIntentBits.MessageContent, GatewayIntentBits.GuildVoiceStates] });
 let mainChannel: TextChannel | undefined;
+let voiceLogChannel: TextChannel | undefined;
 
 const player = createAudioPlayer();
 let timeoutId: NodeJS.Timer | null = null;
@@ -57,13 +58,17 @@ function joinVoice(voiceConnection: voiceConnection) {
             if (client.users.cache.get(userId)?.bot) return;
             transcriber.listen(connection.receiver, userId, client.users.cache.get(userId)).then((data: any) => {
                 if (!data.transcript.text || player.state.status === AudioPlayerStatus.Playing) return;
-                let text = data.transcript.text.toLowerCase();
-                let user = data.user;
-                console.log(`[${new Date().toLocaleTimeString('en-US')}] ${data.user}: ${text}`);
+                const text = data.transcript.text.toLowerCase();
+                const username = client.users.cache.get(userId)?.username;
+                const voiceTextLog = `[${new Date().toLocaleTimeString('en-US')}] ${username}: ${text}`
+                console.log(voiceTextLog);
+                if (voiceLogChannel && voiceLogChannel.type === ChannelType.GuildText) {
+                    voiceLogChannel.send(voiceTextLog).catch((e) => console.log(`Error sending to voiceLogChannel: ${e}`));
+                }
                 for (let regexAudio of regexToAudio) {
                     const audio = regexAudio.getAudio();
                     if (regexAudio.regex.test(text) && audio) {
-                        playAudioFile(audio, user);
+                        playAudioFile(audio, username);
                         break;
                     }
                 }
@@ -71,33 +76,39 @@ function joinVoice(voiceConnection: voiceConnection) {
         });
     }
     // Remove listeners on disconnect
-    connection.on(VoiceConnectionStatus.Disconnected, async () => {
-        connection.receiver.speaking.removeAllListeners();
-        try {
-            await Promise.race([
-                entersState(connection, VoiceConnectionStatus.Signalling, 5_000),
-                entersState(connection, VoiceConnectionStatus.Connecting, 5_000),
-            ]);
-            // Seems to be reconnecting to a new channel - ignore disconnect
-        } catch (error) {
-            // Seems to be a real disconnect which SHOULDN'T be recovered from
-            connection.destroy();
-        }
-    })
+    if (connection.listenerCount(VoiceConnectionStatus.Disconnected) === 0) {
+        connection.on(VoiceConnectionStatus.Disconnected, async () => {
+            connection.receiver.speaking.removeAllListeners();
+            try {
+                await Promise.race([
+                    entersState(connection, VoiceConnectionStatus.Signalling, 5_000),
+                    entersState(connection, VoiceConnectionStatus.Connecting, 5_000),
+                ]);
+                // Seems to be reconnecting to a new channel - ignore disconnect
+            } catch (error) {
+                // Seems to be a real disconnect which SHOULDN'T be recovered from
+                connection.destroy();
+            }
+        })
+    }
 
     // Temp fix for Discord UDP packet issue
-    connection.on('stateChange', (oldState, newState) => {
-        const oldNetworking = Reflect.get(oldState, 'networking');
-        const newNetworking = Reflect.get(newState, 'networking');
+    if (connection.listenerCount('stateChange') === 0) {
+        connection.on('stateChange', (oldState, newState) => {
+            const oldNetworking = Reflect.get(oldState, 'networking');
+            const newNetworking = Reflect.get(newState, 'networking');
+            oldNetworking?.setMaxListeners(1);
+            newNetworking?.setMaxListeners(1);
 
-        const networkStateChangeHandler = (oldNetworkState: any, newNetworkState: any) => {
-            const newUdp = Reflect.get(newNetworkState, 'udp');
-            clearInterval(newUdp?.keepAliveInterval);
-        }
+            const networkStateChangeHandler = (oldNetworkState: any, newNetworkState: any) => {
+                const newUdp = Reflect.get(newNetworkState, 'udp');
+                clearInterval(newUdp?.keepAliveInterval);
+            }
 
-        oldNetworking?.off('stateChange', networkStateChangeHandler);
-        newNetworking?.on('stateChange', networkStateChangeHandler);
-    });
+            oldNetworking?.off('stateChange', networkStateChangeHandler);
+            newNetworking?.on('stateChange', networkStateChangeHandler);
+        });
+    }
 }
 
 // Join voice channel and play audio
@@ -136,7 +147,7 @@ client.on(Events.MessageCreate, async (message: Message): Promise<void> => {
     }
     // Send message
     if (botMessage) {
-        message.channel.send(botMessage);
+        message.channel.send(botMessage).catch((e) => console.log(`Error sending message: ${e}`));;
     }
     // Audio replies
     for (let regexAudio of regexToAudio) {
@@ -277,6 +288,10 @@ client.once(Events.ClientReady, (): void => {
     let channel = client.channels.cache.get(process.env.MAIN_CHANNEL_ID ?? '');
     if (channel && channel.type === ChannelType.GuildText) {
         mainChannel = channel;
+    }
+    channel = client.channels.cache.get(process.env.VOICE_LOG_CHANNEL_ID ?? '');
+    if (channel && channel.type === ChannelType.GuildText) {
+        voiceLogChannel = channel;
     }
     console.log('Same5JokesBot online.');
 });
